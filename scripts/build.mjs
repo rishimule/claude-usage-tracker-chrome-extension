@@ -13,16 +13,35 @@ async function run() {
 
   const common = {
     bundle: true,
-    format: "esm",
     target: "es2022",
     platform: "browser",
     sourcemap: true,
     logLevel: "info",
   };
 
-  await build({ ...common, entryPoints: ["src/background.ts"], outfile: resolve(DIST, "background.js") });
-  await build({ ...common, entryPoints: ["src/content/content.ts"], outfile: resolve(DIST, "content.js") });
-  await build({ ...common, entryPoints: ["src/content/page-context.ts"], outfile: resolve(DIST, "page-context.js") });
+  // Service worker: ES module (manifest declares "type": "module").
+  await build({
+    ...common,
+    format: "esm",
+    entryPoints: ["src/background.ts"],
+    outfile: resolve(DIST, "background.js"),
+  });
+
+  // Content scripts and MAIN-world scripts: classic scripts. MV3 does not allow
+  // ESM in content_scripts, so we emit IIFE so esbuild strips top-level exports
+  // and wraps the module in a self-invoking function.
+  await build({
+    ...common,
+    format: "iife",
+    entryPoints: ["src/content/content.ts"],
+    outfile: resolve(DIST, "content.js"),
+  });
+  await build({
+    ...common,
+    format: "iife",
+    entryPoints: ["src/content/page-context.ts"],
+    outfile: resolve(DIST, "page-context.js"),
+  });
 
   await copyFile("manifest.json", resolve(DIST, "manifest.json"));
   await copyFile("src/content/footer.css", resolve(DIST, "footer.css"));
