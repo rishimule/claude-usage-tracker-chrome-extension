@@ -58,8 +58,7 @@ export function mountFooter(doc: Document): FooterHandle {
 
   const handle: FooterHandle = { host, root, planEl, metricEl, refreshBtn, cleanups: [] };
 
-  installPagePadding(doc, handle);
-  installResizeObserver(doc, handle);
+  installLayoutShift(doc, handle);
 
   return handle;
 }
@@ -138,40 +137,46 @@ function defaultFormatOptions(): FormatOptions {
   };
 }
 
-function installPagePadding(doc: Document, handle: FooterHandle): void {
+/**
+ * Footer always sits at bottom: 0. We push known fixed-bottom UI of the host
+ * page (chat input, disclaimer banner, etc.) up by FOOTER_HEIGHT_PX so it
+ * does not get covered. The selector list lives here intentionally — it is
+ * the single point that needs to change when claude.ai re-skins.
+ */
+function installLayoutShift(doc: Document, handle: FooterHandle): void {
   const styleEl = doc.createElement("style");
-  styleEl.textContent = `body { padding-bottom: ${FOOTER_HEIGHT_PX}px !important; }`;
+  styleEl.setAttribute("data-cut-shift", "1");
+  styleEl.textContent = `
+    body { padding-bottom: ${FOOTER_HEIGHT_PX}px !important; }
+
+    /* Push fixed-bottom chat-input regions on claude.ai up by the footer height. */
+    [data-testid='chat-input'],
+    form[action*='completion'],
+    footer[role='form'],
+    div[class*='chat-input' i] {
+      bottom: ${FOOTER_HEIGHT_PX}px !important;
+    }
+
+    /* Anthropic's small "Claude is AI..." disclaimer that sits inside the
+       chat-input bar uses translate-y; nudge it up too where it lives in a
+       sticky / fixed parent. */
+    [class*='disclaimer' i],
+    [data-testid*='disclaimer' i] {
+      margin-bottom: ${FOOTER_HEIGHT_PX}px !important;
+    }
+  `;
   doc.head?.appendChild(styleEl);
   handle.cleanups.push(() => styleEl.remove());
 }
 
-function installResizeObserver(doc: Document, handle: FooterHandle): void {
-  const candidates = [
-    "[data-testid='chat-input']",
-    "form[action*='completion']",
-    "footer[role='form']",
-    "div[class*='chat-input' i]",
-  ];
-  let target: Element | null = null;
-  for (const sel of candidates) {
-    target = doc.querySelector(sel);
-    if (target) break;
-  }
-  if (!target || !("ResizeObserver" in window)) return;
-
-  const ro = new ResizeObserver((entries) => {
-    const h = entries[0]?.contentRect.height ?? 0;
-    handle.host.style.bottom = `${Math.max(0, Math.round(h))}px`;
-  });
-  ro.observe(target);
-  handle.cleanups.push(() => ro.disconnect());
-}
-
 // --- Wiring (only in extension runtime) ---
+// page-context.js is injected by the manifest as a separate content_script
+// at run_at: document_start, world: MAIN. It must run before Anthropic's
+// app bundle so its fetch/XHR patches catch the very first bootstrap call.
+// We deliberately do NOT inject page-context.js from here.
 export function bootstrapInExtension(): void {
   if (typeof chrome === "undefined" || !chrome.runtime?.id) return;
 
-  injectPageContext();
   const handle = mountFooter(document);
 
   const lastStateKey = `lastState_${location.host}`;
@@ -212,14 +217,6 @@ export function bootstrapInExtension(): void {
       }, 500);
     });
   });
-}
-
-function injectPageContext(): void {
-  const s = document.createElement("script");
-  s.src = chrome.runtime.getURL("page-context.js");
-  s.async = false;
-  (document.head ?? document.documentElement).appendChild(s);
-  s.remove();
 }
 
 if (typeof chrome !== "undefined" && chrome.runtime?.id) {

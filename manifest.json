@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Claude Usage Tracker",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Persistent footer showing Claude plan + usage on claude.ai and console.anthropic.com.",
   "icons": {
     "16": "icons/16.png",
@@ -15,6 +15,13 @@
   "content_scripts": [
     {
       "matches": ["*://*.claude.ai/*", "*://console.anthropic.com/*"],
+      "js": ["page-context.js"],
+      "run_at": "document_start",
+      "all_frames": false,
+      "world": "MAIN"
+    },
+    {
+      "matches": ["*://*.claude.ai/*", "*://console.anthropic.com/*"],
       "js": ["content.js"],
       "css": [],
       "run_at": "document_end",
@@ -24,7 +31,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["page-context.js", "footer.css", "footer.html"],
+      "resources": ["footer.css", "footer.html"],
       "matches": ["*://*.claude.ai/*", "*://console.anthropic.com/*"]
     }
   ]

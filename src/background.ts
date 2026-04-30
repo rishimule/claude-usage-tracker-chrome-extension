@@ -49,8 +49,7 @@ async function fetchAuthoritative(host: string, tabId?: number): Promise<void> {
   try {
     if (origin === "claude.ai") {
       const bootstrap = await fetchJson("https://claude.ai/api/bootstrap");
-      if (bootstrap.status === 401) return await broadcast(origin, { kind: "error", reason: "unauth" }, tabId);
-      if (bootstrap.status >= 500) return await broadcast(origin, { kind: "error", reason: "network" }, tabId);
+      if (bootstrap.status === 401) return await broadcastIfWorse(origin, { kind: "error", reason: "unauth" }, tabId);
       const state1 = applyPayload(origin, bootstrap.body);
       if (state1) await broadcast(origin, state1, tabId);
 
@@ -64,14 +63,29 @@ async function fetchAuthoritative(host: string, tabId?: number): Promise<void> {
       }
     } else {
       const billing = await fetchJson("https://console.anthropic.com/api/billing/usage");
-      if (billing.status === 401) return await broadcast(origin, { kind: "error", reason: "unauth" }, tabId);
+      if (billing.status === 401) return await broadcastIfWorse(origin, { kind: "error", reason: "unauth" }, tabId);
       const state = applyPayload(origin, billing.body);
       if (state) await broadcast(origin, state, tabId);
     }
   } catch (err) {
-    console.warn("[cut] fetch failed", err);
-    await broadcast(origin, { kind: "error", reason: "network" }, tabId);
+    // Active fetch is best-effort. Intercepted traffic from page-context.js
+    // is the primary source. Don't overwrite a cached "ok" state with a
+    // network error just because our guess at the endpoint URL was wrong.
+    console.warn("[cut] active fetch failed", err);
+    await broadcastIfWorse(origin, { kind: "error", reason: "network" }, tabId);
   }
+}
+
+/**
+ * Broadcasts an error state only if no successful state is already cached.
+ * This prevents transient/optional active-fetch failures from clobbering a
+ * good intercepted snapshot.
+ */
+async function broadcastIfWorse(origin: Origin, errState: State, tabId?: number): Promise<void> {
+  const existing = await chrome.storage.local.get(STORAGE_KEY(origin));
+  const cached = existing[STORAGE_KEY(origin)] as State | undefined;
+  if (cached && cached.kind === "ok") return; // keep good cached value
+  await broadcast(origin, errState, tabId);
 }
 
 async function fetchJson(url: string): Promise<{ status: number; body: unknown }> {
