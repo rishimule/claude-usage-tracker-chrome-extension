@@ -1,9 +1,11 @@
 /* footer.css — scoped via shadow root */
 :host {
-  --cut-bg: var(--bg-000, #2b2b2b);
-  --cut-fg: var(--text-100, #ececec);
-  --cut-dim: var(--text-300, #a3a3a3);
-  --cut-border: rgba(255, 255, 255, 0.08);
+  /* Explicit values — do not inherit from host page; CSS custom properties
+     pierce shadow DOM and Claude.ai's vars resolve to low-contrast grays. */
+  --cut-bg: #1e1e1e;
+  --cut-fg: #e8e8e8;
+  --cut-dim: #909090;
+  --cut-border: rgba(255, 255, 255, 0.10);
 
   --cut-green: #4ade80;
   --cut-yellow: #facc15;
@@ -16,10 +18,10 @@
 
 @media (prefers-color-scheme: light) {
   :host {
-    --cut-bg: var(--bg-000, #ffffff);
-    --cut-fg: var(--text-100, #1f1f1f);
-    --cut-dim: var(--text-300, #555);
-    --cut-border: rgba(0, 0, 0, 0.08);
+    --cut-bg: #ffffff;
+    --cut-fg: #1a1a1a;
+    --cut-dim: #606060;
+    --cut-border: rgba(0, 0, 0, 0.10);
   }
 }
 
