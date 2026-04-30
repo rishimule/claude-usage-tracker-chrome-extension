@@ -120,7 +120,7 @@ Follow industry-standard trunk-based / GitHub Flow conventions:
 8. **No `--no-verify`, no `--amend` on pushed commits, no skipping signing.** If a hook fails, fix the cause.
 9. **PRs are the review surface.** Open via `gh pr create`. Title follows Conventional Commits. Description states *what* changed and *why*, lists test coverage, and links related issues. Keep PRs small enough to review in one sitting.
 10. **CI must be green before merge.** Check with `gh pr checks`. Resolve all review threads before merging. Prefer squash-merge to keep `main` history clean unless the branch's commit history is intentionally curated.
-11. **Delete merged branches** (`gh pr merge --delete-branch` or remote auto-delete).
+11. **Do not delete merged branches** unless the user explicitly asks. Never pass `--delete-branch` to `gh pr merge` and do not run `git branch -d` / `git push origin --delete` unprompted.
 12. **Tags & releases** are cut from `main` via `gh release create`, following SemVer (`vMAJOR.MINOR.PATCH`).
 13. **Sensitive files** (`.env`, credentials, large binaries) never get committed. Stage explicitly (`git add <file>`); avoid `git add -A` / `git add .` in mixed working trees.
 
