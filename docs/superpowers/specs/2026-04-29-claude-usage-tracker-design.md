@@ -1,8 +1,10 @@
 # Claude Usage Tracker — Design Spec
 
 **Date:** 2026-04-29
-**Status:** Draft, awaiting review
+**Status:** Partially implemented — Enterprise only
 **Owner:** Rishi Mule
+
+> **Implementation status (as of 2026-04-30):** The extension is functional for **Enterprise** accounts on `claude.ai` and for **API** workspaces on `console.anthropic.com`. Free, Pro, and Team tiers are designed and the parser/detector code is in place, but the real API response shapes for those tiers have not been recorded as fixtures yet. Until fixtures are added and `parse-usage.ts` / `detect-plan.ts` are confirmed against real data, those tiers display "Usage unavailable".
 
 ## 1. Purpose
 
@@ -168,9 +170,10 @@ No telemetry, no remote logging. All failures are local (`console.warn` from the
 
 ## 11. Open Questions
 
-- Exact paths and shapes of the internal claude.ai / console.anthropic.com usage endpoints — must be discovered by recording network traffic during implementation. The `endpoints.js` module is designed to absorb this discovery without changing other layers.
-- Whether the same endpoint serves Free vs Pro vs Team or whether each tier surfaces a different shape. Detection logic will branch accordingly.
-- Whether `console.anthropic.com` exposes spend-vs-limit on every page or only on the billing page. May force B (intercept-only) for that origin if it does not.
+- **Resolved:** `console.anthropic.com` billing endpoint confirmed working for API/Enterprise spend.
+- **Unresolved:** Exact paths and response shapes for Free, Pro, and Team `claude.ai` endpoints. The `endpoints.ts` patterns cover the known `/api/bootstrap` and `/api/organizations/{orgId}/usage` paths, but the field names in those responses for non-Enterprise tiers have not been recorded. Until real fixtures are added, `parse-usage.ts` falls through to `null` for those tiers and the footer shows "Usage unavailable".
+- **Unresolved:** Whether the same endpoint serves Free vs Pro vs Team or whether each tier surfaces a different shape. The discriminator arrays in `detect-plan.ts` cover common strings; the actual value Anthropic returns for each tier is unconfirmed.
+- **Unresolved:** Whether `console.anthropic.com` exposes spend-vs-limit on every page or only on the billing page. Current implementation always fetches `/api/billing/usage`.
 
 ## 12. Out-of-Scope Future Work
 

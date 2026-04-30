@@ -1,6 +1,8 @@
 # Fixtures
 
-These files are placeholders. Real data must be recorded by a logged-in user.
+**Current state:** Only Enterprise (`enterprise-usage.json`) and API console (`console-spend.json`) fixtures contain real data. All other files (`free-bootstrap.json`, `pro-bootstrap.json`, `team-bootstrap.json`, `message-rate-limit-headers.json`) are still empty `{}` placeholders — the corresponding unit test cases are auto-skipped until real recordings replace them. This is why the extension only works for Enterprise accounts today.
+
+To unlock Free, Pro, or Team support, record the relevant fixture(s) following the instructions below.
 
 ## How to record API fixtures
 
