@@ -16,12 +16,13 @@ function installFetchPatch(): void {
     const response = await original.apply(this, args as Parameters<typeof window.fetch>);
     try {
       const first = args[0];
-      const url =
+      const rawUrl =
         typeof first === "string"
           ? first
           : first instanceof Request
           ? first.url
           : (first as URL).toString();
+      const url = toAbsolute(rawUrl);
       const m = matchEndpoint(url);
       if (m) {
         console.log("[cut] fetch intercepted", m.kind, url);
@@ -51,7 +52,8 @@ function installXhrPatch(): void {
   const origOpen = X.open;
   const origSend = X.send;
   X.open = function (this: XMLHttpRequest, method: string, url: string | URL, ...rest: unknown[]) {
-    (this as unknown as { __cutUrl?: string }).__cutUrl = typeof url === "string" ? url : url.toString();
+    const raw = typeof url === "string" ? url : url.toString();
+    (this as unknown as { __cutUrl?: string }).__cutUrl = toAbsolute(raw);
     // @ts-expect-error pass-through to original signature
     return origOpen.call(this, method, url, ...rest);
   };
@@ -80,4 +82,13 @@ function installXhrPatch(): void {
 
 function post(payload: unknown): void {
   window.postMessage({ source: CHANNEL, payload }, "*");
+}
+
+function toAbsolute(url: string): string {
+  if (/^https?:\/\//i.test(url)) return url;
+  try {
+    return new URL(url, location.href).toString();
+  } catch {
+    return url;
+  }
 }
