@@ -1,9 +1,11 @@
 /* footer.css — scoped via shadow root */
 :host {
-  --cut-bg: var(--bg-000, #2b2b2b);
-  --cut-fg: var(--text-100, #ececec);
-  --cut-dim: var(--text-300, #a3a3a3);
-  --cut-border: rgba(255, 255, 255, 0.08);
+  /* Explicit values — do not inherit from host page; CSS custom properties
+     pierce shadow DOM and Claude.ai's vars resolve to low-contrast grays. */
+  --cut-bg: #1e1e1e;
+  --cut-fg: #e8e8e8;
+  --cut-dim: #909090;
+  --cut-border: rgba(255, 255, 255, 0.10);
 
   --cut-green: #4ade80;
   --cut-yellow: #facc15;
@@ -16,10 +18,10 @@
 
 @media (prefers-color-scheme: light) {
   :host {
-    --cut-bg: var(--bg-000, #ffffff);
-    --cut-fg: var(--text-100, #1f1f1f);
-    --cut-dim: var(--text-300, #555);
-    --cut-border: rgba(0, 0, 0, 0.08);
+    --cut-bg: #ffffff;
+    --cut-fg: #1a1a1a;
+    --cut-dim: #606060;
+    --cut-border: rgba(0, 0, 0, 0.10);
   }
 }
 
@@ -43,19 +45,26 @@
 }
 
 .cut-pill {
-  padding: 2px 8px;
-  border-radius: 999px;
   font-weight: 600;
   font-size: 11px;
   letter-spacing: 0.02em;
-  background: rgba(255, 255, 255, 0.08);
 }
-.cut-pill[data-plan="Free"]       { color: #cbd5e1; }
-.cut-pill[data-plan="Pro"]        { color: #93c5fd; }
-.cut-pill[data-plan="Team"]       { color: #c4b5fd; }
-.cut-pill[data-plan="Enterprise"] { color: #fcd34d; }
-.cut-pill[data-plan="API"]        { color: #5eead4; }
+/* Dark theme plan colors */
+.cut-pill[data-plan="Free"]       { color: #94a3b8; }
+.cut-pill[data-plan="Pro"]        { color: #60a5fa; }
+.cut-pill[data-plan="Team"]       { color: #a78bfa; }
+.cut-pill[data-plan="Enterprise"] { color: #fbbf24; }
+.cut-pill[data-plan="API"]        { color: #2dd4bf; }
 .cut-pill[data-plan="Unknown"]    { color: var(--cut-dim); }
+
+@media (prefers-color-scheme: light) {
+  .cut-pill[data-plan="Free"]       { color: #475569; }
+  .cut-pill[data-plan="Pro"]        { color: #1d4ed8; }
+  .cut-pill[data-plan="Team"]       { color: #6d28d9; }
+  .cut-pill[data-plan="Enterprise"] { color: #b45309; }
+  .cut-pill[data-plan="API"]        { color: #0f766e; }
+  .cut-pill[data-plan="Unknown"]    { color: var(--cut-dim); }
+}
 
 .cut-metric { font-variant-numeric: tabular-nums; }
 .cut-metric .pct.green  { color: var(--cut-green); }
