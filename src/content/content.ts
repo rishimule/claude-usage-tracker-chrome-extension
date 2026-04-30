@@ -192,29 +192,24 @@ function installSidebarOffset(doc: Document, handle: FooterHandle): void {
   handle.cleanups.push(() => { mo?.disconnect(); ro?.disconnect(); });
 }
 
-/**
- * Footer always sits at bottom: 0. We push known fixed-bottom UI of the host
- * page (chat input, disclaimer banner, etc.) up by FOOTER_HEIGHT_PX so it
- * does not get covered. The selector list lives here intentionally — it is
- * the single point that needs to change when claude.ai re-skins.
- */
+// Selectors for elements that, when position:fixed, need to be nudged up.
+// data-testid="chat-input" is on the ProseMirror contenteditable itself (not
+// an outer wrapper), so we must confirm position:fixed at runtime — applying
+// bottom:32px to a position:relative contenteditable clips text in its
+// overflow-y:auto parent, making typed text invisible (confirmed on /new).
+const FIXED_BOTTOM_SELECTORS = [
+  "[data-testid='chat-input']",
+  "form[action*='completion']",
+  "footer[role='form']",
+  "div[class*='chat-input' i]",
+] as const;
+
 function installLayoutShift(doc: Document, handle: FooterHandle): void {
   const styleEl = doc.createElement("style");
   styleEl.setAttribute("data-cut-shift", "1");
   styleEl.textContent = `
     body { padding-bottom: ${FOOTER_HEIGHT_PX}px !important; }
 
-    /* Push fixed-bottom chat-input regions on claude.ai up by the footer height. */
-    [data-testid='chat-input'],
-    form[action*='completion'],
-    footer[role='form'],
-    div[class*='chat-input' i] {
-      bottom: ${FOOTER_HEIGHT_PX}px !important;
-    }
-
-    /* Anthropic's small "Claude is AI..." disclaimer that sits inside the
-       chat-input bar uses translate-y; nudge it up too where it lives in a
-       sticky / fixed parent. */
     [class*='disclaimer' i],
     [data-testid*='disclaimer' i] {
       margin-bottom: ${FOOTER_HEIGHT_PX}px !important;
@@ -222,6 +217,36 @@ function installLayoutShift(doc: Document, handle: FooterHandle): void {
   `;
   doc.head?.appendChild(styleEl);
   handle.cleanups.push(() => styleEl.remove());
+
+  installFixedInputOffset(doc, handle);
+}
+
+// Applies bottom offset only to confirmed position:fixed elements so we never
+// affect in-flow inputs (e.g. the /new home page where the same data-testid
+// is on a relative-positioned contenteditable inside overflow-y:auto).
+function installFixedInputOffset(doc: Document, handle: FooterHandle): void {
+  const overridden = new Map<HTMLElement, string>();
+
+  function applyOffsets(): void {
+    for (const sel of FIXED_BOTTOM_SELECTORS) {
+      for (const el of doc.querySelectorAll<HTMLElement>(sel)) {
+        if (getComputedStyle(el).position !== "fixed") continue;
+        if (!overridden.has(el)) {
+          overridden.set(el, el.style.bottom);
+          el.style.setProperty("bottom", `${FOOTER_HEIGHT_PX}px`, "important");
+        }
+      }
+    }
+  }
+
+  applyOffsets();
+  const mo = new MutationObserver(applyOffsets);
+  mo.observe(doc.body, { childList: true, subtree: true });
+
+  handle.cleanups.push(() => {
+    mo.disconnect();
+    for (const [el, orig] of overridden) el.style.bottom = orig;
+  });
 }
 
 // --- Wiring (only in extension runtime) ---
