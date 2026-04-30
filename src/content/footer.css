@@ -1,0 +1,84 @@
+/* footer.css — scoped via shadow root */
+:host {
+  --cut-bg: var(--bg-000, #2b2b2b);
+  --cut-fg: var(--text-100, #ececec);
+  --cut-dim: var(--text-300, #a3a3a3);
+  --cut-border: rgba(255, 255, 255, 0.08);
+
+  --cut-green: #4ade80;
+  --cut-yellow: #facc15;
+  --cut-orange: #fb923c;
+  --cut-red: #f87171;
+
+  all: initial;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: light) {
+  :host {
+    --cut-bg: var(--bg-000, #ffffff);
+    --cut-fg: var(--text-100, #1f1f1f);
+    --cut-dim: var(--text-300, #555);
+    --cut-border: rgba(0, 0, 0, 0.08);
+  }
+}
+
+.cut-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  padding: 0 12px;
+  background: var(--cut-bg);
+  color: var(--cut-fg);
+  border-top: 1px solid var(--cut-border);
+  font-size: 12px;
+  line-height: 32px;
+}
+
+.cut-left, .cut-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cut-pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  background: rgba(255, 255, 255, 0.08);
+}
+.cut-pill[data-plan="Free"]       { color: #cbd5e1; }
+.cut-pill[data-plan="Pro"]        { color: #93c5fd; }
+.cut-pill[data-plan="Team"]       { color: #c4b5fd; }
+.cut-pill[data-plan="Enterprise"] { color: #fcd34d; }
+.cut-pill[data-plan="API"]        { color: #5eead4; }
+.cut-pill[data-plan="Unknown"]    { color: var(--cut-dim); }
+
+.cut-metric { font-variant-numeric: tabular-nums; }
+.cut-metric .pct.green  { color: var(--cut-green); }
+.cut-metric .pct.yellow { color: var(--cut-yellow); }
+.cut-metric .pct.orange { color: var(--cut-orange); }
+.cut-metric .pct.red    { color: var(--cut-red); }
+.cut-metric .stale      { color: var(--cut-dim); margin-left: 6px; }
+
+.cut-refresh {
+  background: transparent;
+  border: none;
+  color: var(--cut-dim);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.cut-refresh:hover { color: var(--cut-fg); background: var(--cut-border); }
+.cut-refresh[disabled] { opacity: 0.5; cursor: default; }
+.cut-refresh.spinning svg { animation: cut-spin 1s linear infinite; }
+
+@keyframes cut-spin {
+  from { transform: rotate(0deg); } to { transform: rotate(360deg); }
+}
