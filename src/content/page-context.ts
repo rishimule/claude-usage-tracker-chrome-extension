@@ -4,6 +4,7 @@ import { matchEndpoint } from "../lib/endpoints";
 const CHANNEL = "cut-intercept";
 
 (function install() {
+  console.log("[cut] page-context loaded at", document.readyState, location.href);
   installFetchPatch();
   installXhrPatch();
 })();
@@ -23,6 +24,7 @@ function installFetchPatch(): void {
           : (first as URL).toString();
       const m = matchEndpoint(url);
       if (m) {
+        console.log("[cut] fetch intercepted", m.kind, url);
         const clone = response.clone();
         clone
           .json()
@@ -30,6 +32,9 @@ function installFetchPatch(): void {
           .catch(() => {
             /* non-JSON response, ignore */
           });
+      } else if (/\/api\/(bootstrap|organizations|billing|usage|account)/i.test(url)) {
+        // Diagnostic: log claude.ai API URLs we *didn't* match so we can fix patterns.
+        console.log("[cut] fetch UNMATCHED but looks relevant", url);
       }
     } catch {
       /* swallow */
@@ -54,7 +59,13 @@ function installXhrPatch(): void {
     this.addEventListener("load", () => {
       const url = (this as unknown as { __cutUrl?: string }).__cutUrl ?? "";
       const m = matchEndpoint(url);
-      if (!m) return;
+      if (!m) {
+        if (/\/api\/(bootstrap|organizations|billing|usage|account)/i.test(url)) {
+          console.log("[cut] xhr UNMATCHED but looks relevant", url);
+        }
+        return;
+      }
+      console.log("[cut] xhr intercepted", m.kind, url);
       try {
         const parsed = JSON.parse(this.responseText);
         post({ kind: m.kind, origin: m.origin, url, body: parsed });

@@ -176,6 +176,7 @@ function installLayoutShift(doc: Document, handle: FooterHandle): void {
 // We deliberately do NOT inject page-context.js from here.
 export function bootstrapInExtension(): void {
   if (typeof chrome === "undefined" || !chrome.runtime?.id) return;
+  console.log("[cut] content loaded at", document.readyState, location.href);
 
   const handle = mountFooter(document);
 
@@ -190,6 +191,7 @@ export function bootstrapInExtension(): void {
   window.addEventListener("message", (e) => {
     const msg = e.data;
     if (!msg || msg.source !== "cut-intercept") return;
+    console.log("[cut] forwarding intercept to SW", msg.payload?.kind, msg.payload?.url);
     chrome.runtime.sendMessage({ type: "intercepted", origin: location.host, payload: msg.payload });
   });
 
