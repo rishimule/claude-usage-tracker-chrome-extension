@@ -31,14 +31,14 @@ describe("parseUsage", () => {
     const isEmpty = !payload || (typeof payload === "object" && Object.keys(payload as object).length === 0);
     (isEmpty ? it.skip : it)(`extracts a ${expected} metric from ${file} on ${plan}`, () => {
       const metric = parseUsage(plan, payload);
-      expect(metric).not.toBeNull();
-      expect(metric!.type).toBe(expected);
+      if (metric === null) throw new Error("parseUsage returned null for non-empty fixture");
+      expect(metric.type).toBe(expected);
 
-      if (metric!.type === "messages") {
+      if (metric.type === "messages") {
         expect(metric.remaining).toBeGreaterThanOrEqual(0);
         expect(metric.resetsAt).toBeGreaterThan(0);
         expect(["5h", "daily"]).toContain(metric.window);
-      } else if (metric!.type === "spend") {
+      } else if (metric.type === "spend") {
         expect(metric.usedCents).toBeGreaterThanOrEqual(0);
         expect(metric.limitCents).toBeGreaterThan(0);
         expect(metric.pct).toBeGreaterThanOrEqual(0);
