@@ -6,6 +6,7 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "package": "node scripts/package.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . --ext .ts",
