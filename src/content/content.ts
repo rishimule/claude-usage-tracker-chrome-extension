@@ -59,6 +59,7 @@ export function mountFooter(doc: Document): FooterHandle {
   const handle: FooterHandle = { host, root, planEl, metricEl, refreshBtn, cleanups: [] };
 
   installLayoutShift(doc, handle);
+  installSidebarOffset(doc, handle);
 
   return handle;
 }
@@ -135,6 +136,60 @@ function defaultFormatOptions(): FormatOptions {
     locale: navigator.language || "en-US",
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   };
+}
+
+// Sidebar selectors in specificity order — update when claude.ai re-skins.
+const SIDEBAR_SELECTORS = [
+  '[data-testid="sidebar"]',
+  'nav[class*="sidebar" i]',
+  'div[class*="sidebar" i]',
+  'nav[aria-label*="navigation" i]',
+  'nav',
+] as const;
+
+function findSidebar(doc: Document): Element | null {
+  for (const sel of SIDEBAR_SELECTORS) {
+    const el = doc.querySelector(sel);
+    if (el) return el;
+  }
+  return null;
+}
+
+// Offsets footer left edge to match sidebar width so it only spans the main
+// content area. Uses MutationObserver to wait for React to render the sidebar,
+// then ResizeObserver to track collapse/expand transitions.
+function installSidebarOffset(doc: Document, handle: FooterHandle): void {
+  let ro: ResizeObserver | null = null;
+  let mo: MutationObserver | null = null;
+
+  function attach(sidebar: Element): void {
+    const update = (): void => {
+      const w = (sidebar as HTMLElement).getBoundingClientRect().width;
+      handle.host.style.left = w > 0 ? `${w}px` : "0";
+    };
+    update();
+    ro = new ResizeObserver(update);
+    ro.observe(sidebar);
+  }
+
+  const existing = findSidebar(doc);
+  if (existing) {
+    attach(existing);
+    handle.cleanups.push(() => ro?.disconnect());
+    return;
+  }
+
+  // Sidebar not yet in DOM (React lazy-render) — wait for it.
+  mo = new MutationObserver(() => {
+    const sidebar = findSidebar(doc);
+    if (sidebar) {
+      mo!.disconnect();
+      mo = null;
+      attach(sidebar);
+    }
+  });
+  mo.observe(doc.body, { childList: true, subtree: true });
+  handle.cleanups.push(() => { mo?.disconnect(); ro?.disconnect(); });
 }
 
 /**
