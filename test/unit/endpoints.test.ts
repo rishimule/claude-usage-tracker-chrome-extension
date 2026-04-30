@@ -26,9 +26,35 @@ describe("matchEndpoint", () => {
       kind: "completion",
     });
   });
+  it("matches bare claude.ai organization endpoint", () => {
+    expect(matchEndpoint("https://claude.ai/api/organizations/abc")).toEqual({
+      origin: "claude.ai",
+      kind: "org",
+    });
+    expect(matchEndpoint("https://claude.ai/api/organizations/abc?foo=bar")).toEqual({
+      origin: "claude.ai",
+      kind: "org",
+    });
+  });
+  it("matches subscription_status", () => {
+    expect(matchEndpoint("https://claude.ai/api/organizations/abc/subscription_status")).toEqual({
+      origin: "claude.ai",
+      kind: "subscription",
+    });
+  });
+  it("matches is_pure_usage_based", () => {
+    expect(matchEndpoint("https://claude.ai/api/organizations/abc/is_pure_usage_based")).toEqual({
+      origin: "claude.ai",
+      kind: "subscription",
+    });
+  });
   it("returns null for unrelated URLs", () => {
     expect(matchEndpoint("https://example.com/foo")).toBeNull();
     expect(matchEndpoint("https://claude.ai/api/account/avatar")).toBeNull();
+  });
+  it("does not match nested project endpoints as bare-org", () => {
+    expect(matchEndpoint("https://claude.ai/api/organizations/abc/projects/xyz")).toBeNull();
+    expect(matchEndpoint("https://claude.ai/api/organizations/abc/sync/settings")).toBeNull();
   });
 });
 
