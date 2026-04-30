@@ -5,8 +5,8 @@ This guide walks you through manually verifying the extension end-to-end in real
 ## Prerequisites
 
 - Chrome (or any Chromium 120+ with MV3 service workers).
-- A signed-in Claude account (Free, Pro, Team, or Enterprise — whichever you have access to).
-- Optionally: a signed-in `console.anthropic.com` workspace if you want to verify the API path.
+- A signed-in Claude account. **Currently only Enterprise accounts are confirmed working.** Free, Pro, and Team accounts will show "Usage unavailable" because the real API response shapes for those tiers have not been recorded as fixtures yet (see step 5 and `test/fixtures/README.md` if you want to contribute a recording).
+- Optionally: a signed-in `console.anthropic.com` workspace if you want to verify the API path (confirmed working).
 
 ## 1. Build and load the extension
 
@@ -41,7 +41,7 @@ Verify each item:
 
 - [ ] **Footer visible** at the bottom. 32 px tall. Border on top.
 - [ ] **Plan pill** on the left side shows your tier — `Free`, `Pro`, `Team`, or `Enterprise`. The pill text color changes per tier.
-- [ ] **Metric** on the right side is non-empty. For Free/Pro/Team it should look like `15 messages left · resets 16:00`. For Enterprise: `$420.48 / $500.00 (84%)`.
+- [ ] **Metric** on the right side is non-empty. For Enterprise: `$420.48 / $500.00 (84%)`. For Free/Pro/Team the metric is **not yet functional** and will show "Usage unavailable" — this is expected until those tiers' fixtures are recorded (see step 6).
 - [ ] **Percentage color** matches the threshold table: green < 50, yellow < 70, orange < 90, red ≥ 90. (Easiest to verify on Enterprise where the percentage is always visible.)
 - [ ] **Refresh button** (↻ on far right). Click → it spins for ~500 ms, then settles. The metric refreshes.
 - [ ] **Theme**: toggle Anthropic's light/dark setting (Settings → Appearance, or your system theme if you're on auto). The footer's background and text colors should follow.

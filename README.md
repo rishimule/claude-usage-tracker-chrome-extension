@@ -1,5 +1,7 @@
 # Claude Usage Tracker
 
+> **Current status:** Only tested and confirmed working with **Enterprise** accounts. Free, Pro, and Team tiers are not yet functional — the extension will show "Usage unavailable" for those plans until the corresponding API endpoint shapes are confirmed and recorded as fixtures (see [Contributing](#contributing--recording-fixtures)).
+
 A Chrome extension (Manifest V3) that injects a persistent footer into `claude.ai` and `console.anthropic.com` showing your current plan and an at-a-glance usage metric (messages remaining, spend vs limit, or rate-limit %, depending on tier).
 
 The footer:
@@ -49,9 +51,9 @@ Once installed and you're signed in to Claude, the footer appears at the bottom 
 
 - **Left side** — a colored pill showing your plan: `Free`, `Pro`, `Team`, `Enterprise`, or `API`.
 - **Right side** — your tier-appropriate metric:
-  - Free / Pro / Team: `15 messages left · resets 16:00`
-  - Enterprise: `$420.48 / $500.00 (84%)`
-  - API console: same dollar form
+  - Enterprise (**currently working**): `$420.48 / $500.00 (84%)`
+  - API console (**currently working**): same dollar form
+  - Free / Pro / Team (**not yet working**): intended to show `15 messages left · resets 16:00`, but currently displays "Usage unavailable" — see the note at the top of this README
   - Subscription rate windows when reported: `5h: 73% · resets 13:30` or `7d: 22% · resets May 4, 08:00`
 - **Refresh button** (↻) on the far right — click to force a re-fetch. It spins while the request is in flight and is disabled for two seconds after each click.
 
@@ -109,6 +111,21 @@ npm run package       # produces release/claude-usage-tracker-v<version>.zip
 ```
 
 Upload the zip to the GitHub Releases page (or to the Chrome Web Store dashboard if/when published).
+
+---
+
+## Contributing / Recording fixtures
+
+Free, Pro, and Team support requires recording real API responses from those account tiers. If you have one of these accounts:
+
+1. Open `https://claude.ai`, sign in, open DevTools → Network → enable **Preserve log**.
+2. Reload the page. Locate the `bootstrap` or `organizations/.../usage` response.
+3. Copy the response body and paste it into the matching file under `test/fixtures/api/` (e.g. `free-bootstrap.json`, `pro-bootstrap.json`, `team-bootstrap.json`).
+4. Strip secrets per `test/fixtures/README.md`.
+5. Run `npm test`. If the previously-skipped case now fails, the field names in the response don't match `src/lib/parse-usage.ts` — extend the relevant `keys` array there and re-run.
+6. Open a PR with the fixture + any parser change.
+
+See `test/fixtures/README.md` and `test/browser-testing.md` for the full recording procedure.
 
 ---
 
