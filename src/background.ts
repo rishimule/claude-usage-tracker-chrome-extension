@@ -32,7 +32,12 @@ async function handleIntercepted(host: string, payload: unknown, tabId?: number)
   if (!origin) return;
   const inner = isObj(payload) && "body" in payload ? (payload as { body: unknown }).body : payload;
   const next = applyPayload(origin, inner);
-  if (next) await broadcast(origin, next, tabId);
+  if (next) {
+    console.log("[cut] SW broadcast intercepted state", origin, next.kind === "ok" ? next.plan : next.kind);
+    await broadcast(origin, next, tabId);
+  } else {
+    console.log("[cut] SW intercept did NOT yield state — body shape unrecognized", isObj(inner) ? Object.keys(inner).slice(0, 8) : typeof inner);
+  }
 }
 
 function applyPayload(_origin: Origin, body: unknown): State | null {
